@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin - Complaint Router</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36'%3E%3Crect width='36' height='36' rx='10' fill='%237A1F3D'/%3E%3Cpath d='M9 18h8l6-6M17 18l6 6' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="/static/style.css?v=5">
+<style>.maplink{color:#7A1F3D;font-weight:700;text-decoration:underline}.miss.gps{background:#F0FDF4;color:#15803D}
+.filters{align-items:flex-end}
+.f-date{flex:1 1 140px;display:flex;flex-direction:column;gap:4px;min-height:0!important}
+.f-date span{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#6E5A62;padding-left:4px}
+.filters label.f-date input[type=date]{flex:none;width:100%;height:46px;min-height:46px;font-size:14px;padding:0 12px}
+.filters .clear{align-self:flex-end;min-height:46px}</style>
+</head>
+<body>
+
+<div class="banner short">
+  <svg class="ring r1" width="560" height="560" viewBox="0 0 560 560" aria-hidden="true"><circle cx="280" cy="280" r="270" fill="none" stroke="#fff" stroke-opacity=".12" stroke-width="2"/><circle cx="280" cy="280" r="190" fill="none" stroke="#fff" stroke-opacity=".12" stroke-width="2"/><circle cx="280" cy="280" r="110" fill="none" stroke="#fff" stroke-opacity=".12" stroke-width="2"/></svg>
+  <div class="wrap wide">
+    <header class="topbar">
+      <a href="/" class="logo">
+        <svg width="36" height="36" viewBox="0 0 36 36" aria-hidden="true"><rect width="36" height="36" rx="10" fill="#fff"/><path d="M9 18h8l6-6M17 18l6 6" fill="none" stroke="#5A1230" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="25" cy="11" r="2.8" fill="#FFB38A"/></svg>
+        Complaint Router
+      </a>
+      <div class="top-right" id="topActions" hidden>
+        <button type="button" class="ghost" id="refreshBtn">Refresh</button>
+        <button type="button" class="ghost" id="logoutBtn">Log out</button>
+      </div>
+    </header>
+    <div class="admin-title"><h1>Complaints overview</h1><p>Review, filter and update every complaint in one place.</p></div>
+  </div>
+</div>
+
+<main class="wide" style="margin-top:-72px">
+
+  <!-- LOGIN -->
+  <section id="loginView" class="card login">
+    <h2>Admin sign in</h2>
+    <form id="loginForm" style="display:flex;flex-direction:column;gap:16px" novalidate>
+      <div class="field"><label for="pw">Admin password</label><input id="pw" type="password" autocomplete="current-password"></div>
+      <div id="loginError" class="alert" role="alert" hidden></div>
+      <button class="btn" type="submit">Sign in</button>
+    </form>
+  </section>
+
+  <!-- DASHBOARD -->
+  <div id="dashView" class="stack" style="gap:32px" hidden>
+
+    <section class="stats" aria-label="Summary">
+      <div class="stat"><span class="icon-tile soft"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7A1F3D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3.5" width="16" height="17" rx="3"/><path d="M8 9h8M8 13h8M8 17h5"/></svg></span><div><div class="lab">Total complaints</div><div class="num" id="sTotal">0</div></div></div>
+      <div class="stat"><span class="icon-tile" style="background:#FEF2F2"><svg width="24" height="24" viewBox="0 0 16 16" fill="none" stroke="#B91C1C" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 1.5l7 12.5H1L8 1.5z"/><path d="M8 6.5v3.2M8 11.6v.2"/></svg></span><div><div class="lab">High severity</div><div class="num" id="sHigh" style="color:#B91C1C">0</div></div></div>
+      <div class="stat"><span class="icon-tile" style="background:#FFFBEB"><svg width="24" height="24" viewBox="0 0 16 16" fill="none" stroke="#B45309" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="8" r="6.2"/><path d="M8 4.8v3.8M8 10.8v.2"/></svg></span><div><div class="lab">Medium severity</div><div class="num" id="sMed" style="color:#B45309">0</div></div></div>
+      <div class="stat"><span class="icon-tile" style="background:#F0FDF4"><svg width="24" height="24" viewBox="0 0 16 16" fill="none" stroke="#15803D" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="8" r="6.2"/><path d="M5.2 8.2l1.9 1.9 3.7-3.9"/></svg></span><div><div class="lab">Low severity</div><div class="num" id="sLow" style="color:#15803D">0</div></div></div>
+    </section>
+
+    <section class="panels">
+      <div class="panel dept">
+        <div class="panel-head">
+          <div><h2>By department</h2><p class="sub">Where complaints are going</p></div>
+          <span class="most" id="mostBadge" hidden></span>
+        </div>
+        <div id="deptList" style="display:flex;flex-direction:column;gap:2px"></div>
+      </div>
+      <div class="panel status">
+        <div><h2>By status</h2><p class="sub">Where each complaint stands</p></div>
+        <div class="donut"><div class="wrapd" role="img" id="donutLabel">
+          <svg width="132" height="132" viewBox="0 0 120 120" aria-hidden="true" style="transform:rotate(-90deg)" id="donutSvg"></svg>
+          <div class="mid"><b id="donutTotal">0</b><span>complaints</span></div>
+        </div></div>
+        <ul class="legend" id="legend"></ul>
+      </div>
+    </section>
+
+    <section class="filters" aria-label="Filters">
+      <div class="f-search"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="#6E5A62" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="8" r="5"/><path d="M12 12l3.5 3.5"/></svg><input id="fQ" type="search" aria-label="Search complaints" placeholder="Search ID, text, area..."></div>
+      <select id="fDept" aria-label="Filter by department"><option value="">All departments</option></select>
+      <select id="fSev" aria-label="Filter by severity"><option value="">All severities</option><option>High</option><option>Medium</option><option>Low</option></select>
+      <select id="fStatus" aria-label="Filter by status"><option value="">All statuses</option><option>New</option><option>In Progress</option><option>Resolved</option></select>
+      <label class="f-date"><span>From</span><input id="fFrom" type="date"></label>
+      <label class="f-date"><span>To</span><input id="fTo" type="date"></label>
+      <button type="button" class="clear" id="clearBtn">Clear</button>
+    </section>
+
+    <div id="listError" class="alert" role="alert" hidden></div>
+    <p class="count-line" id="countLine"></p>
+
+    <section class="table-card">
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>ID</th><th>Issue</th><th>Department</th><th>Severity</th><th>Status</th><th>Date</th><th><span class="sr-only">Actions</span></th></tr></thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+      <div class="empty" id="empty" hidden>No complaints match these filters.</div>
+    </section>
+  </div>
+</main>
+
+<dialog id="dlg"><div class="dlg" id="dlgBody"></div></dialog>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const STATUSES = ["New", "In Progress", "Resolved"];
+const STATUS_COLOR = {"New":"#7A1F3D", "In Progress":"#C2547C", "Resolved":"#16A34A"};
+const STATUS_NOTE = {"New":"Awaiting review", "In Progress":"Being handled", "Resolved":"Closed out"};
+let KEY = sessionStorage.getItem("adminKey") || "";
+let rowsData = [], searchTimer = null;
+
+const ICONS = {
+  road:'<path d="M5 16L7 2M13 16L11 2M9 4v2M9 8v2M9 12v2"/>',
+  drop:'<path d="M9 2.5S4 8 4 11a5 5 0 0010 0c0-3-5-8.5-5-8.5z"/>',
+  waves:'<path d="M2 7c2-2 3 2 5 0s3 2 5 0 3 2 4 0M2 12c2-2 3 2 5 0s3 2 5 0 3 2 4 0"/>',
+  trash:'<path d="M3.5 5h11M7 5V3.5h4V5M5 5l.7 10h6.6L13 5M7.5 8v4.5M10.5 8v4.5"/>',
+  grid:'<rect x="3" y="3" width="12" height="12" rx="2"/><path d="M3 7h12M3 11h12M7 3v12M11 3v12"/>',
+  bolt:'<path d="M10 2L4.5 10H9l-1 6 5.5-8H9l1-6z"/>',
+  leaf:'<path d="M4 14C4 8 8 4 15 3.5 14.5 10.5 10.5 14.5 4.5 14.5M4 14l5-5"/>',
+  paw:'<circle cx="5" cy="7" r="1.6"/><circle cx="9" cy="4.5" r="1.6"/><circle cx="13" cy="7" r="1.6"/><path d="M9 9c-2.5 0-4 2-4 3.6 0 1.4 1.2 1.9 2.3 1.9.7 0 1.2-.3 1.7-.3s1 .3 1.7.3c1.1 0 2.3-.5 2.3-1.9C13 11 11.5 9 9 9z"/>',
+  car:'<path d="M3 11l1.2-4A1.5 1.5 0 015.6 6h6.8a1.5 1.5 0 011.4 1L15 11v3h-2v-1.5H5V14H3v-3z"/><circle cx="6" cy="9.5" r=".6"/><circle cx="12" cy="9.5" r=".6"/>',
+  shield:'<path d="M9 1.8l6 2.4v4.4c0 3.3-2.3 6.1-6 7.6-3.7-1.5-6-4.3-6-7.6V4.2l6-2.4z"/>',
+};
+function deptIcon(name){
+  const n = name.toLowerCase();
+  if (n.includes("road")) return ICONS.road;
+  if (n.includes("water")) return ICONS.drop;
+  if (n.includes("sewer")) return ICONS.waves;
+  if (n.includes("drain")) return ICONS.grid;
+  if (n.includes("sanit")) return ICONS.trash;
+  if (n.includes("electr")) return ICONS.bolt;
+  if (n.includes("park")) return ICONS.leaf;
+  if (n.includes("animal")) return ICONS.paw;
+  if (n.includes("traffic")) return ICONS.car;
+  return ICONS.shield;
+}
+const svgIcon = (p, c = "#7A1F3D", s = 15) => `<svg width="${s}" height="${s}" viewBox="0 0 18 18" fill="none" stroke="${c}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
+
+function fmtDate(s){
+  const d = new Date(String(s).replace(" ", "T") + "Z");
+  return isNaN(d) ? s : d.toLocaleString(undefined, {day:"numeric", month:"short", hour:"numeric", minute:"2-digit"});
+}
+function pct(n, total){ if (!total) return "0%"; const v = n * 100 / total; return (Number.isInteger(v) ? v : v.toFixed(1).replace(/\.0$/, "")) + "%"; }
+
+/* ---- api ---- */
+async function api(path, opts = {}){
+  const res = await fetch(path, {...opts, headers: {...(opts.headers || {}), "x-admin-key": KEY}});
+  if (res.status === 401) { logout("Wrong password. Please try again."); throw new Error("auth"); }
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    let msg = data.detail || "Something went wrong.";
+    if (Array.isArray(msg)) msg = msg.map(x => x.msg).join(", ");
+    throw new Error(msg);
+  }
+  return data;
+}
+
+/* ---- login ---- */
+function showDash(on){
+  $("loginView").hidden = on; $("dashView").hidden = !on; $("topActions").hidden = !on;
+}
+function logout(msg){
+  KEY = ""; sessionStorage.removeItem("adminKey");
+  showDash(false);
+  if (msg) { $("loginError").textContent = msg; $("loginError").hidden = false; }
+}
+$("loginForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  KEY = $("pw").value;
+  $("loginError").hidden = true;
+  if (!KEY) { $("loginError").textContent = "Enter the admin password."; $("loginError").hidden = false; return; }
+  try {
+    await api("/api/stats");
+    sessionStorage.setItem("adminKey", KEY);
+    $("pw").value = "";
+    await start();
+  } catch (err) {
+    if (err.message !== "auth") { $("loginError").textContent = "Could not connect. Please try again."; $("loginError").hidden = false; }
+  }
+});
+$("logoutBtn").addEventListener("click", () => logout());
+$("refreshBtn").addEventListener("click", () => loadAll());
+
+/* ---- stats ---- */
+function renderStats(s){
+  $("sTotal").textContent = s.total;
+  $("sHigh").textContent = s.severity.High;
+  $("sMed").textContent = s.severity.Medium;
+  $("sLow").textContent = s.severity.Low;
+
+  const depts = Object.entries(s.by_department).sort((a, b) => b[1] - a[1]);
+  if (!depts.length) {
+    $("deptList").innerHTML = '<div class="hint" style="padding:12px 4px">No complaints yet.</div>';
+    $("mostBadge").hidden = true;
+  } else {
+    const max = depts[0][1];
+    $("deptList").innerHTML = depts.map(([name, n], i) => `
+      <div class="drow ${i === 0 ? "top" : ""}">
+        <span class="ic">${svgIcon(deptIcon(name))}</span>
+        <span class="nm">${esc(name)}</span>
+        <span class="tr"><i style="width:${Math.round(n * 100 / max)}%"></i></span>
+        <b>${n}</b><span class="pc">${pct(n, s.total)}</span>
+      </div>`).join("");
+    $("mostBadge").innerHTML = svgIcon('<path d="M9 2l2.1 4.3 4.7.7-3.4 3.3.8 4.7L9 12.8 4.8 15l.8-4.7L2.2 7l4.7-.7L9 2z"/>', "#5A1230", 14) + "Most: " + esc(depts[0][0]);
+    $("mostBadge").hidden = false;
+  }
+
+  // donut (r=44, circumference ~276.46)
+  const C = 2 * Math.PI * 44, gap = 3;
+  let off = 0, svg = '<circle cx="60" cy="60" r="44" fill="none" stroke="#F2E7DE" stroke-width="14"/>';
+  STATUSES.forEach(k => {
+    const n = s.status[k] || 0;
+    if (!n || !s.total) return;
+    const len = C * n / s.total;
+    const dash = Math.max(len - (s.total > n ? gap : 0), 1);
+    svg += `<circle cx="60" cy="60" r="44" fill="none" stroke="${STATUS_COLOR[k]}" stroke-width="14" stroke-dasharray="${dash.toFixed(1)} 300" stroke-dashoffset="${(-off).toFixed(1)}"/>`;
+    off += len;
+  });
+  $("donutSvg").innerHTML = svg;
+  $("donutTotal").textContent = s.total;
+  $("donutLabel").setAttribute("aria-label", STATUSES.map(k => `${s.status[k] || 0} ${k}`).join(", "));
+  $("legend").innerHTML = STATUSES.map(k => `
+    <li><span class="sw" style="background:${STATUS_COLOR[k]}"></span>
+      <span class="nm">${k}<small>${STATUS_NOTE[k]}</small></span>
+      <b>${s.status[k] || 0}</b><span class="pc">${pct(s.status[k] || 0, s.total)}</span></li>`).join("");
+}
+
+/* ---- list ---- */
+function query(){
+  const p = new URLSearchParams();
+  const m = {q:"fQ", department:"fDept", severity:"fSev", status:"fStatus", date_from:"fFrom", date_to:"fTo"};
+  for (const [k, id] of Object.entries(m)) { const v = $(id).value.trim(); if (v) p.set(k, v); }
+  return p.toString();
+}
+function statusSelect(c){
+  return `<select data-id="${c.id}" aria-label="Status for ${esc(c.complaint_id)}">` +
+    STATUSES.map(s => `<option${s === c.status ? " selected" : ""}>${s}</option>`).join("") + "</select>";
+}
+function renderRows(list){
+  rowsData = list;
+  $("empty").hidden = list.length > 0;
+  $("countLine").textContent = list.length ? `Showing ${list.length} complaint${list.length === 1 ? "" : "s"}, most urgent first` : "";
+  $("rows").innerHTML = list.map((c, i) => {
+    const k = c.severity.toLowerCase();
+    return `<tr class="${c.severity === "High" ? "high-row" : ""}">
+      <td class="mono">${esc(c.complaint_id)}</td>
+      <td><div class="t1">${esc(c.category)}</div><div class="t2">${c.area ? esc(c.area) : (c.map_url ? '<span class="miss gps">GPS location</span>' : '<span class="miss">Location missing</span>')} · ${esc(c.summary)}</div></td>
+      <td style="color:var(--body)">${esc(c.department)}</td>
+      <td style="white-space:nowrap"><span class="sev sev-${k}">${esc(c.severity)} · ${c.urgency_score}</span></td>
+      <td>${statusSelect(c)}</td>
+      <td class="date">${esc(fmtDate(c.created_at))}</td>
+      <td><button type="button" class="viewbtn" data-i="${i}">${svgIcon('<path d="M1.5 9S4.5 3.5 9 3.5 16.5 9 16.5 9 13.5 14.5 9 14.5 1.5 9 1.5 9z"/><circle cx="9" cy="9" r="2.2"/>', "currentColor", 16)}View</button></td>
+    </tr>`;
+  }).join("");
+}
+async function loadList(){
+  $("listError").hidden = true;
+  try { renderRows(await api("/api/complaints?" + query())); }
+  catch (err) { if (err.message !== "auth") { $("listError").textContent = err.message; $("listError").hidden = false; } }
+}
+async function loadStats(){
+  try { renderStats(await api("/api/stats")); } catch (err) { /* handled in api() */ }
+}
+function loadAll(){ return Promise.all([loadStats(), loadList()]); }
+
+/* status change */
+$("rows").addEventListener("change", async (e) => {
+  const sel = e.target.closest("select[data-id]");
+  if (!sel) return;
+  sel.disabled = true;
+  try {
+    await api(`/api/complaints/${sel.dataset.id}/status`, {
+      method:"PATCH", headers:{"Content-Type":"application/json"}, body: JSON.stringify({status: sel.value}),
+    });
+    await loadAll();
+  } catch (err) {
+    if (err.message !== "auth") { $("listError").textContent = "Could not update status: " + err.message; $("listError").hidden = false; await loadList(); }
+  }
+});
+
+/* detail dialog */
+$("rows").addEventListener("click", (e) => {
+  const b = e.target.closest(".viewbtn");
+  if (!b) return;
+  const c = rowsData[Number(b.dataset.i)];
+  $("dlgBody").innerHTML = `
+    <div class="dlg-head"><h2>${esc(c.complaint_id)} · ${esc(c.category)}</h2><button class="x" type="button" aria-label="Close" id="dlgClose">&times;</button></div>
+    <dl>
+      <dt>Department</dt><dd>${esc(c.department)}</dd>
+      <dt>Severity</dt><dd><span class="sev sev-${c.severity.toLowerCase()}">${esc(c.severity)} · ${c.urgency_score}/10</span> ${esc(c.severity_reason || "")}</dd>
+      <dt>Priority</dt><dd>${esc(c.priority)}</dd>
+      <dt>Status</dt><dd>${esc(c.status)}</dd>
+      <dt>Submitted</dt><dd>${esc(fmtDate(c.created_at))}</dd>
+      <dt>Area</dt><dd>${esc([c.area, c.landmark && "Landmark: " + c.landmark, c.pincode].filter(Boolean).join(", ") || "Not provided")}</dd>
+      <dt>Map</dt><dd>${c.map_url ? `<a class="maplink" href="${esc(c.map_url)}" target="_blank" rel="noopener">Open in Maps</a>` : "No GPS location"}</dd>
+      <dt>Contact</dt><dd>${esc(c.contact || "Not provided")}</dd>
+      <dt>Summary</dt><dd>${esc(c.summary)}</dd>
+      <dt>Suggested action</dt><dd>${esc(c.suggested_action)}</dd>
+    </dl>
+    <div><div class="k" style="margin-bottom:6px">Original complaint</div><pre>${esc(c.description)}</pre></div>
+    ${c.photo_url ? `<img src="${esc(c.photo_url)}" alt="Photo attached to ${esc(c.complaint_id)}">` : ""}
+    <div><div class="k" style="margin-bottom:6px">Draft email</div><pre>Subject: ${esc(c.email_subject)}\n\n${esc(c.email_body)}</pre></div>`;
+  $("dlg").showModal();
+  $("dlgClose").addEventListener("click", () => $("dlg").close());
+});
+$("dlg").addEventListener("click", (e) => { if (e.target === $("dlg")) $("dlg").close(); });
+
+/* filters */
+["fDept", "fSev", "fStatus", "fFrom", "fTo"].forEach(id => $(id).addEventListener("change", loadList));
+$("fQ").addEventListener("input", () => { clearTimeout(searchTimer); searchTimer = setTimeout(loadList, 300); });
+$("clearBtn").addEventListener("click", () => {
+  ["fQ", "fDept", "fSev", "fStatus", "fFrom", "fTo"].forEach(id => $(id).value = "");
+  loadList();
+});
+
+/* start */
+async function start(){
+  showDash(true);
+  try {
+    const meta = await fetch("/api/meta").then(r => r.json());
+    $("fDept").innerHTML = '<option value="">All departments</option>' + meta.departments.map(d => `<option>${esc(d)}</option>`).join("");
+  } catch {}
+  await loadAll();
+}
+if (KEY) { api("/api/stats").then(start).catch(() => {}); }
+</script>
+</body>
+</html>

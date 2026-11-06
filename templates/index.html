@@ -1,0 +1,523 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Complaint Router - Civic helpdesk</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36'%3E%3Crect width='36' height='36' rx='10' fill='%237A1F3D'/%3E%3Cpath d='M9 18h8l6-6M17 18l6 6' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Tamil:wght@400;600;700;800&family=Noto+Sans+Devanagari:wght@400;600;700;800&family=Noto+Sans+Malayalam:wght@400;600;700;800&family=Noto+Sans+Telugu:wght@400;600;700;800&display=swap">
+<link rel="stylesheet" href="/static/style.css?v=5">
+<style>
+/* location button + file picker (kept in the page so they never depend on a cached style.css) */
+.with-icon.has-btn input{padding-right:152px}
+.locbtn{display:inline-flex;align-items:center;gap:6px;background:#F8E6EC;color:#5A1230;border:0;border-radius:999px;font:inherit;font-size:12px;font-weight:700;padding:0 12px;min-height:34px;cursor:pointer;white-space:nowrap}
+.locbtn:hover{background:#F1D3DD}
+.locbtn:disabled{opacity:.6;cursor:wait}
+.with-icon .locbtn{position:absolute;right:8px;top:50%;transform:translateY(-50%)}
+.with-icon .locbtn svg{position:static;transform:none;pointer-events:none}
+.loc-status{font-size:12px;color:#6E5A62}
+.loc-status.ok{color:#15803D}
+.drop input::file-selector-button{font:inherit;font-size:13px;font-weight:700;color:#5A1230;background:#F8E6EC;border:0;border-radius:999px;padding:8px 16px;margin-right:12px;cursor:pointer}
+.drop input::file-selector-button:hover{background:#F1D3DD}
+@media (max-width:420px){.with-icon.has-btn input{padding-right:44px}.with-icon .locbtn{font-size:0;gap:0;padding:0 10px}}
+</style>
+
+</head>
+<body>
+
+<div class="banner" id="banner">
+  <svg class="ring r1" width="620" height="620" viewBox="0 0 620 620" aria-hidden="true"><circle cx="310" cy="310" r="300" fill="none" stroke="#fff" stroke-opacity=".12" stroke-width="2"/><circle cx="310" cy="310" r="220" fill="none" stroke="#fff" stroke-opacity=".12" stroke-width="2"/><circle cx="310" cy="310" r="140" fill="none" stroke="#fff" stroke-opacity=".12" stroke-width="2"/></svg>
+  <svg class="ring r2" width="300" height="300" viewBox="0 0 300 300" aria-hidden="true"><circle cx="150" cy="150" r="140" fill="none" stroke="#fff" stroke-opacity=".10" stroke-width="2"/><circle cx="150" cy="150" r="90" fill="none" stroke="#fff" stroke-opacity=".10" stroke-width="2"/></svg>
+  <div class="wrap">
+    <header class="topbar">
+      <a href="/" class="logo">
+        <svg width="36" height="36" viewBox="0 0 36 36" aria-hidden="true"><rect width="36" height="36" rx="10" fill="#fff"/><path d="M9 18h8l6-6M17 18l6 6" fill="none" stroke="#5A1230" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="25" cy="11" r="2.8" fill="#FFB38A"/></svg>
+        Complaint Router
+      </a>
+      <div class="top-right">
+        <select id="lang" class="lang" data-no-t aria-label="Language">
+          <option value="en">English</option>
+          <option value="ta">தமிழ்</option>
+          <option value="hi">हिन्दी</option>
+          <option value="ml">മലയാളം</option>
+          <option value="te">తెలుగు</option>
+        </select>
+        <a href="/admin" class="pill-link">Admin</a>
+      </div>
+    </header>
+
+    <!-- hero (home) -->
+    <div class="hero" id="heroBox">
+      <div class="hero-text">
+        <span class="tag">Civic helpdesk</span>
+        <h1>Tell us what's wrong. We'll find <span>who fixes it.</span></h1>
+        <p class="lead">Describe a neighbourhood problem in your own words. We pick the right department, judge how urgent it is, and draft the email for you.</p>
+        <a href="#form" class="cta">Report a problem
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9h12M10.5 4.5L15 9l-4.5 4.5"/></svg></a>
+      </div>
+      <div class="example">
+        <div class="eyebrow">Example result</div>
+        <div class="quote">"A water pipe has burst near the bus stand and the road is completely flooded."</div>
+        <hr>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div class="ex-row"><span class="l"><svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 16V4.5L9 2l6 2.5V16M7 16v-3h4v3M6.5 7h1M10.5 7h1M6.5 10h1M10.5 10h1"/></svg>Department</span><b>Water Supply</b></div>
+          <div class="ex-row"><span class="l"><svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 2.5l7 12.5H2L9 2.5z"/><path d="M9 7.5v3.2M9 12.7v.2"/></svg>Severity</span><span class="sev sev-high">High · 8/10</span></div>
+          <div class="ex-row"><span class="l"><svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="9" r="6.5"/><path d="M9 5.5V9l2.5 1.5"/></svg>Priority</span><b>P1 · within 24 hours</b></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- result banner -->
+    <div class="done-row" id="doneBox" hidden>
+      <span class="tick"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#7A1F3D" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
+      <div class="txt">
+        <h1 id="resultTitle" tabindex="-1">Complaint submitted</h1>
+        <p><span id="rDate" data-no-t></span> · <span>Note your complaint ID for reference.</span></p>
+      </div>
+      <div class="idbox"><span class="l">Complaint ID</span><span class="v" id="rId"></span><button type="button" id="copyIdBtn">Copy</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- HOME -->
+<main class="home" id="viewHome">
+  <div class="gap80">
+    <ol class="steps">
+      <li>
+        <span class="icon-tile"><svg width="26" height="26" viewBox="0 0 26 26" fill="none" stroke="#7A1F3D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 22l1.2-5L17 5.2a2.4 2.4 0 013.4 0l.4.4a2.4 2.4 0 010 3.4L9 20.8 4 22z"/><path d="M14.5 7.8l3.7 3.7"/></svg></span>
+        <div><div class="step-no">STEP 1</div><div class="step-t">Describe the problem</div><div class="step-d">Plain language is fine. No categories to pick.</div></div>
+      </li>
+      <li>
+        <span class="icon-tile"><svg width="26" height="26" viewBox="0 0 26 26" fill="none" stroke="#7A1F3D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="6" r="2.6"/><circle cx="20" cy="6" r="2.6"/><circle cx="13" cy="20.5" r="2.6"/><path d="M6 8.6v2.4a3 3 0 003 3h8a3 3 0 003-3V8.6M13 14v3.9"/></svg></span>
+        <div><div class="step-no">STEP 2</div><div class="step-t">We route and rate it</div><div class="step-d">Department, severity and a suggested priority.</div></div>
+      </li>
+      <li>
+        <span class="icon-tile"><svg width="26" height="26" viewBox="0 0 26 26" fill="none" stroke="#7A1F3D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5.5" width="20" height="15" rx="3"/><path d="M4 8l9 6.5L22 8"/></svg></span>
+        <div><div class="step-no">STEP 3</div><div class="step-t">Copy or download the email</div><div class="step-d">A polite, ready-to-send letter to the authority.</div></div>
+      </li>
+    </ol>
+
+    <section id="form" class="form-section">
+      <div class="head"><h2>What happened?</h2><p>Only the description is required.</p></div>
+
+      <form id="complaintForm" class="card" novalidate>
+        <div class="field big">
+          <label for="description">What is the problem? <span class="req" aria-hidden="true">*</span><span class="sr-only">(required)</span></label>
+          <textarea id="description" name="description" rows="5" maxlength="2000" required placeholder="e.g. There is a massive pothole causing traffic on Main Street."></textarea>
+          <div class="chips" role="group" aria-label="Examples">
+            <span>Try an example:</span>
+            <button type="button" class="chip" data-text="There is a massive pothole on Main Street causing traffic, and two bikes slipped there this week.">Pothole</button>
+            <button type="button" class="chip" data-text="The streetlights in our street have not been working for one week, and it is very dark at night.">Streetlight</button>
+            <button type="button" class="chip" data-text="Garbage has not been collected near the market for three days and the area smells bad.">Garbage</button>
+            <button type="button" class="chip" data-text="There is a water pipeline leakage near the school and water is flowing onto the road.">Water leakage</button>
+          </div>
+          <div class="row"><span class="hint">You can write in English or Tamil.</span><span class="hint"><span id="count">0</span>/2000</span></div>
+        </div>
+
+        <div class="grid2">
+          <div class="field">
+            <label for="area">Area <span class="rec">· recommended</span></label>
+            <div class="with-icon has-btn"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="#6E5A62" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 16s5-4.2 5-8.2A5 5 0 004 7.8C4 11.8 9 16 9 16z"/><circle cx="9" cy="7.8" r="1.8"/></svg><input id="area" name="area" maxlength="100" placeholder="e.g. RS Puram" autocomplete="off"><button type="button" class="locbtn" id="locBtn" title="Use my current location"><svg width="15" height="15" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="9" r="3"/><path d="M9 1.5v3M9 13.5v3M1.5 9h3M13.5 9h3"/></svg>Use my location</button></div>
+            <input type="hidden" id="lat" name="lat"><input type="hidden" id="lng" name="lng">
+            <div class="loc-status" id="locStatus" role="status" hidden></div>
+          </div>
+          <div class="field">
+            <label for="landmark">Landmark</label>
+            <div class="with-icon"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="#6E5A62" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 16V3M4 4h8l-1.5 3L12 10H4"/></svg><input id="landmark" name="landmark" maxlength="100" placeholder="e.g. Near the bus stand" autocomplete="off"></div>
+          </div>
+          <div class="field">
+            <label for="pincode">Pincode</label>
+            <div class="with-icon"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="#6E5A62" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 3L5.5 15M12.5 3l-1 12M3 6.5h12M2.5 11.5h12"/></svg><input id="pincode" name="pincode" inputmode="numeric" maxlength="6" placeholder="6 digits" autocomplete="postal-code"></div>
+          </div>
+          <div class="field">
+            <label for="contact">Email or phone</label>
+            <div class="with-icon"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="#6E5A62" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="4" width="13" height="10" rx="2"/><path d="M3 5.5l6 4.5 6-4.5"/></svg><input id="contact" name="contact" maxlength="100" placeholder="Optional" autocomplete="off"></div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="photo">Photo <span class="opt">· optional, JPG, PNG or WEBP, up to 5 MB</span></label>
+          <div class="drop">
+            <svg width="30" height="30" viewBox="0 0 26 26" fill="none" stroke="#7A1F3D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="20" height="16" rx="3"/><circle cx="9.5" cy="11" r="2"/><path d="M4 19l6-5 4 3.5 3-2.5 5 4"/></svg>
+            <input id="photo" name="photo" type="file" accept="image/jpeg,image/png,image/webp">
+          </div>
+        </div>
+
+        <div id="error" class="alert" role="alert" hidden></div>
+
+        <button id="submitBtn" type="submit" class="btn block">Analyze and draft email
+          <svg width="20" height="20" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9h12M10.5 4.5L15 9l-4.5 4.5"/></svg></button>
+        <p class="note">Your complaint is classified by AI and saved so staff can follow up.</p>
+      </form>
+    </section>
+  </div>
+</main>
+
+<!-- LOADING -->
+<main class="load" id="viewLoad" hidden>
+  <section class="card load-card" role="status" aria-live="polite">
+    <div class="bar-top" role="progressbar" aria-label="Analysis progress" aria-valuemin="0" aria-valuemax="100"><i id="loadBar"></i></div>
+    <div class="load-body">
+      <div class="load-head">
+        <span class="icon-tile soft"><svg class="spin" width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><circle cx="15" cy="15" r="11" fill="none" stroke="#EBC9D5" stroke-width="3.5"/><circle cx="15" cy="15" r="11" fill="none" stroke="#7A1F3D" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="26 70"/></svg></span>
+        <div><h1>Analyzing your complaint</h1><p id="loadSub">Step 1 of 3 · usually takes a few seconds</p></div>
+      </div>
+      <ol class="stepper" id="stepper">
+        <li><div class="rail"><span class="dot">1</span><span class="line"></span></div><div class="txt"><div><div class="tt">Reading your complaint</div><div class="sd">Understanding the problem and location</div></div><span class="badge">Waiting</span></div></li>
+        <li><div class="rail"><span class="dot">2</span><span class="line"></span></div><div class="txt"><div><div class="tt">Finding the right department</div><div class="sd">Classifying the issue and rating urgency</div></div><span class="badge">Waiting</span></div></li>
+        <li><div class="rail"><span class="dot">3</span><span class="line"></span></div><div class="txt"><div><div class="tt">Drafting the email</div><div class="sd">Writing a polite letter to the department</div></div><span class="badge">Waiting</span></div></li>
+      </ol>
+      <div class="keep">
+        <svg width="20" height="20" viewBox="0 0 18 18" fill="none" stroke="#7A1F3D" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none;margin-top:1px"><rect x="3.5" y="8" width="11" height="7.5" rx="2"/><path d="M6 8V5.8a3 3 0 016 0V8"/></svg>
+        <p>Your complaint is saved once the analysis finishes. Please keep this page open.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- RESULT -->
+<main class="narrow" id="viewResult" hidden>
+  <div class="stack">
+    <section class="card" style="display:flex;flex-direction:column;gap:28px">
+      <div class="res-top">
+        <div style="flex:1 1 280px;min-width:0">
+          <div class="eyebrow">Sent to</div>
+          <h2 id="rDept"></h2>
+          <p class="cat" id="rCategory"></p>
+        </div>
+        <div class="res-right">
+          <span id="rSeverity"></span>
+          <div class="meta">Urgency <b id="rScore" data-no-t style="color:var(--ink)"></b> · <span id="rPriority"></span></div>
+          <p class="reason" id="rReason" hidden></p>
+        </div>
+      </div>
+      <div class="callout"><div class="k">Suggested action</div><p id="rAction"></p></div>
+      <div><div class="k" style="margin-bottom:6px">Summary</div><p class="summary-p" id="rSummary"></p></div>
+    </section>
+
+    <section class="card" style="display:flex;flex-direction:column;gap:22px">
+      <div class="email-head">
+        <span class="icon-tile soft"><svg width="22" height="22" viewBox="0 0 18 18" fill="none" stroke="#7A1F3D" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="4" width="13" height="10" rx="2"/><path d="M3 5.5l6 4.5 6-4.5"/></svg></span>
+        <h2>Draft email</h2>
+      </div>
+      <div class="field"><label for="rSubject">Subject</label><input id="rSubject"></div>
+      <div class="field"><label for="rEmail">Message</label><textarea id="rEmail" rows="12"></textarea></div>
+      <div class="actions">
+        <button type="button" class="btn" id="copyBtn">Copy email</button>
+        <button type="button" class="btn line" id="downloadBtn">Download .txt</button>
+        <button type="button" class="linkbtn push" id="againBtn">Report another problem</button>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer><span>Complaint Router · Civic helpdesk</span></footer>
+<div id="toast" class="toast" role="status" hidden></div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const form = $("complaintForm");
+let current = null, timers = [];
+
+/* ================= language switching (translated by Gemini on the server) ================= */
+let LANG = "en";
+const cache = {};                       // cache[lang][english text] = translation
+const textOrig = new WeakMap();         // text node -> original English text
+const ATTRS = ["placeholder", "aria-label", "title"];
+// Messages that are set from JavaScript. They are translated up front so they appear instantly.
+const EXTRA = [
+  "Done", "In progress", "Waiting", "Copied!", "Copy", "Copy email",
+  "Step 1 of 3 · usually takes a few seconds", "Step 2 of 3 · usually takes a few seconds", "Step 3 of 3 · usually takes a few seconds",
+  "Please describe the problem in at least 10 characters.",
+  "Pincode must be exactly 6 digits.", "Photo is too large (max 5 MB).",
+  "Network error. Please check your connection and try again.",
+  "Something went wrong. Please try again.",
+  "Could not translate right now. Showing English.",
+  "Finding your location...",
+  "Location added. Please check the area name is right.",
+  "Location added, but it is only approximate. Please check the area name.",
+  "Location saved, but we couldn't find the area name. Please type it.",
+  "Your browser can't share location. Please type your area.",
+  "Location permission was denied. Please type your area.",
+  "Could not get your location. Please type your area.",
+  "High", "Medium", "Low",
+];
+const hasLetters = (t) => /[A-Za-z]/.test(t);
+function loadCache(l){
+  if (cache[l]) return cache[l];
+  try { cache[l] = JSON.parse(localStorage.getItem("tr_" + l) || "{}"); } catch { cache[l] = {}; }
+  return cache[l];
+}
+function saveCache(l){ try { localStorage.setItem("tr_" + l, JSON.stringify(cache[l])); } catch {} }
+const T = (t) => (LANG === "en" ? t : (loadCache(LANG)[t] || t));   // instant lookup, falls back to English
+
+async function tr(texts){                // texts -> translations (one request per 60 strings)
+  if (LANG === "en") return texts;
+  const c = loadCache(LANG);
+  const need = [...new Set(texts.map(t => t.trim()).filter(t => t && hasLetters(t) && !c[t]))];
+  try {
+    // small batches, sent in parallel, so the first translation finishes much sooner
+    const lang = LANG, jobs = [];
+    for (let i = 0; i < need.length; i += 20) {
+      jobs.push(fetch("/api/translate", {
+        method: "POST", headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({lang, texts: need.slice(i, i + 20)}),
+      }).then(async (res) => {
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.detail || "translate failed");
+        Object.assign(c, data.translations);
+      }));
+    }
+    await Promise.all(jobs);
+    saveCache(lang);
+  } catch (e) { toast(e.message && e.message !== "translate failed" ? e.message : T("Could not translate right now. Showing English.")); }
+  return texts.map(t => c[t.trim()] || t);
+}
+
+function collect(root){                  // every visible text node and attribute we may translate
+  const nodes = [], attrs = [];
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+    acceptNode(n) {
+      const p = n.parentElement;
+      if (!p || p.closest("script,style,textarea,[data-no-t]")) return NodeFilter.FILTER_REJECT;
+      return n.nodeValue.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+    },
+  });
+  while (walker.nextNode()) nodes.push(walker.currentNode);
+  root.querySelectorAll("*").forEach(el => {
+    if (el.closest("[data-no-t]")) return;
+    ATTRS.forEach(a => { if (el.hasAttribute(a)) attrs.push([el, a]); });
+  });
+  return {nodes, attrs};
+}
+
+async function applyLang(root = document.body){
+  document.documentElement.lang = LANG;
+  const {nodes, attrs} = collect(root);
+  // remember the English original of every node the first time we see it
+  nodes.forEach(n => { if (!textOrig.has(n) && hasLetters(n.nodeValue)) textOrig.set(n, n.nodeValue); });
+  attrs.forEach(([el, a]) => { const k = "orig" + a.replace(/-./g, m => m[1].toUpperCase()); if (!(k in el.dataset) && hasLetters(el.getAttribute(a))) el.dataset[k] = el.getAttribute(a); });
+
+  if (LANG !== "en") {
+    const srcs = [];
+    nodes.forEach(n => textOrig.has(n) && srcs.push(textOrig.get(n)));
+    attrs.forEach(([el, a]) => { const k = "orig" + a.replace(/-./g, m => m[1].toUpperCase()); if (el.dataset[k]) srcs.push(el.dataset[k]); });
+    await tr([...srcs, ...EXTRA, ...(current ? [current.severity, current.priority] : [])]);
+  }
+  const apply = (orig) => (LANG === "en" ? orig : T(orig.trim()));
+  nodes.forEach(n => {
+    if (!textOrig.has(n)) return;
+    const o = textOrig.get(n), lead = o.match(/^\s*/)[0], trail = o.match(/\s*$/)[0];
+    n.nodeValue = lead + apply(o.trim()) + trail;
+  });
+  attrs.forEach(([el, a]) => {
+    const k = "orig" + a.replace(/-./g, m => m[1].toUpperCase());
+    if (el.dataset[k]) el.setAttribute(a, apply(el.dataset[k]));
+  });
+  if (current) $("rDate").textContent = fmtDate(current.created_at);
+}
+
+let toastTimer = null;
+function toast(msg, sticky){
+  const t = $("toast");
+  t.textContent = msg; t.hidden = false;
+  clearTimeout(toastTimer);
+  if (!sticky) toastTimer = setTimeout(() => t.hidden = true, 4000);
+}
+
+async function setLang(l){
+  const sel = $("lang");
+  sel.disabled = true;
+  LANG = l;
+  try { localStorage.setItem("lang", l); } catch {}
+  if (l !== "en") toast("Translating... this takes a few seconds the first time", true);
+  try { await applyLang(); } finally { sel.disabled = false; if (l !== "en") $("toast").hidden = true; }
+}
+$("lang").addEventListener("change", (e) => setLang(e.target.value));
+(function initLang(){
+  let saved = "en";
+  try { saved = localStorage.getItem("lang") || "en"; } catch {}
+  if (saved !== "en" && [...$("lang").options].some(o => o.value === saved)) { $("lang").value = saved; setLang(saved); }
+})();
+
+function esc(s){ return String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function fmtDate(s){
+  const d = new Date(String(s).replace(" ", "T") + "Z");
+  return isNaN(d) ? s : d.toLocaleString(LANG === "en" ? undefined : LANG + "-IN", {day:"numeric", month:"short", year:"numeric", hour:"numeric", minute:"2-digit"});
+}
+async function showError(msg){
+  const box = $("error");
+  box.textContent = T(msg);
+  box.hidden = false;
+  if (LANG !== "en" && T(msg) === msg) {
+    const [t] = await tr([msg]);
+    if (!box.hidden) box.textContent = t;
+  }
+}
+
+function setView(name){
+  $("viewHome").hidden = name !== "home";
+  $("viewLoad").hidden = name !== "load";
+  $("viewResult").hidden = name !== "result";
+  $("heroBox").hidden = name !== "home";
+  $("doneBox").hidden = name !== "result";
+  $("banner").classList.toggle("short", name === "load");
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+
+/* ---- form ---- */
+$("description").addEventListener("input", e => $("count").textContent = e.target.value.length);
+document.querySelectorAll(".chip").forEach(chip => chip.addEventListener("click", () => {
+  const box = $("description");
+  box.value = chip.dataset.text;
+  $("count").textContent = box.value.length;
+  box.focus();
+}));
+
+/* ---- current location ---- */
+function setLoc(msg, ok){
+  const el = $("locStatus");
+  el.textContent = T(msg);
+  el.className = "loc-status" + (ok ? " ok" : "");
+  el.hidden = false;
+}
+async function areaName(lat, lng){        // OpenStreetMap reverse lookup: coordinates -> locality name
+  const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=17&addressdetails=1&accept-language=en&lat=${lat}&lon=${lng}`);
+  if (!r.ok) throw new Error("lookup failed");
+  const a = (await r.json()).address || {};
+  const local = a.suburb || a.neighbourhood || a.quarter || a.city_district || a.village || a.hamlet || a.residential || a.road;
+  const city = a.city || a.town || a.municipality || a.county || a.state_district;
+  return [local, city].filter(Boolean).filter((v, i, arr) => arr.indexOf(v) === i).join(", ");
+}
+$("locBtn").addEventListener("click", () => {
+  const btn = $("locBtn");
+  if (!("geolocation" in navigator)) return setLoc("Your browser can't share location. Please type your area.");
+  btn.disabled = true;
+  setLoc("Finding your location...");
+  navigator.geolocation.getCurrentPosition(async (pos) => {
+    const {latitude, longitude, accuracy} = pos.coords;
+    $("lat").value = latitude.toFixed(6);
+    $("lng").value = longitude.toFixed(6);
+    try {
+      const name = await areaName(latitude, longitude);
+      if (name) {
+        $("area").value = name.slice(0, 100);
+        setLoc(accuracy > 1500 ? "Location added, but it is only approximate. Please check the area name."
+                               : "Location added. Please check the area name is right.", true);
+      } else setLoc("Location saved, but we couldn't find the area name. Please type it.", true);
+    } catch {
+      setLoc("Location saved, but we couldn't find the area name. Please type it.", true);
+    } finally { btn.disabled = false; }
+  }, (err) => {
+    btn.disabled = false;
+    setLoc(err.code === 1 ? "Location permission was denied. Please type your area." : "Could not get your location. Please type your area.");
+  }, {enableHighAccuracy: true, timeout: 12000, maximumAge: 60000});
+});
+
+/* ---- loading steps ---- */
+function paintSteps(active){
+  document.querySelectorAll("#stepper li").forEach((li, i) => {
+    const dot = li.querySelector(".dot"), badge = li.querySelector(".badge");
+    li.className = i < active ? "done" : i === active ? "now" : "";
+    dot.innerHTML = i < active ? "&#10003;" : String(i + 1);
+    badge.textContent = T(i < active ? "Done" : i === active ? "In progress" : "Waiting");
+  });
+  $("loadSub").textContent = T(`Step ${Math.min(active + 1, 3)} of 3 · usually takes a few seconds`);
+  $("loadBar").style.width = [18, 50, 82][Math.min(active, 2)] + "%";
+}
+function startLoading(){
+  setView("load");
+  paintSteps(0);
+  timers = [setTimeout(() => paintSteps(1), 1800), setTimeout(() => paintSteps(2), 4200)];
+}
+function stopLoading(){ timers.forEach(clearTimeout); timers = []; }
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  $("error").hidden = true;
+  const desc = $("description").value.trim();
+  if (desc.length < 10) { showError("Please describe the problem in at least 10 characters."); return $("description").focus(); }
+  const pin = $("pincode").value.trim();
+  if (pin && !/^\d{6}$/.test(pin)) { showError("Pincode must be exactly 6 digits."); return $("pincode").focus(); }
+  const file = $("photo").files[0];
+  if (file && file.size > 5 * 1024 * 1024) { showError("Photo is too large (max 5 MB)."); return $("photo").focus(); }
+
+  startLoading();
+  try {
+    const res = await fetch("/api/complaints", { method: "POST", body: new FormData(form) });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      let msg = data.detail || "Something went wrong. Please try again.";
+      if (Array.isArray(msg)) msg = msg.map(x => x.msg).join(", ");
+      throw new Error(msg);
+    }
+    stopLoading();
+    $("loadBar").style.width = "100%";
+    await showResult(data);
+  } catch (err) {
+    stopLoading();
+    setView("home");
+    showError(err instanceof TypeError ? "Network error. Please check your connection and try again." : (err.message || "Something went wrong."));
+  }
+});
+
+/* ---- result ---- */
+function sevPill(sev){
+  const k = {High:"high", Medium:"medium", Low:"low"}[sev] || "medium";
+  return `<span class="pill pill-${k}"><i></i>${esc(sev)}</span>`;
+}
+async function showResult(d){
+  current = d;
+  $("rId").textContent = d.complaint_id;
+  $("rDate").textContent = fmtDate(d.created_at);
+  $("rDept").textContent = d.department;
+  $("rCategory").textContent = d.category;
+  $("rSeverity").innerHTML = sevPill(d.severity);
+  $("rScore").textContent = d.urgency_score + "/10";
+  $("rPriority").textContent = d.priority;
+  const why = $("rReason");
+  why.textContent = d.severity_reason || "";
+  why.hidden = !d.severity_reason;
+  $("rSummary").textContent = d.summary;
+  $("rAction").textContent = d.suggested_action;
+  $("rSubject").value = d.email_subject;
+  $("rEmail").value = d.email_body;
+  if (LANG !== "en") await applyLang();
+  setView("result");
+  $("resultTitle").focus({preventScroll:true});
+}
+const fullEmail = () => `Subject: ${$("rSubject").value}\n\n${$("rEmail").value}`;
+
+async function copyText(text, btn, label){
+  try { await navigator.clipboard.writeText(text); }
+  catch {
+    const ta = document.createElement("textarea");
+    ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove();
+  }
+  btn.textContent = T("Copied!");
+  setTimeout(() => btn.textContent = T(label), 1500);
+}
+$("copyBtn").addEventListener("click", () => copyText(fullEmail(), $("copyBtn"), "Copy email"));
+$("copyIdBtn").addEventListener("click", () => copyText($("rId").textContent, $("copyIdBtn"), "Copy"));
+$("downloadBtn").addEventListener("click", () => {
+  const blob = new Blob([fullEmail()], {type:"text/plain"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `complaint-${current ? current.complaint_id : "email"}.txt`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+$("againBtn").addEventListener("click", () => {
+  form.reset();
+  $("lat").value = ""; $("lng").value = "";   // hidden inputs are not cleared by reset()
+  $("locStatus").hidden = true;
+  $("count").textContent = "0";
+  $("error").hidden = true;
+  setView("home");
+  $("description").focus({preventScroll:true});
+});
+</script>
+</body>
+</html>
