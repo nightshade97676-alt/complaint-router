@@ -36,49 +36,44 @@ ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "admin123")
 ALLOWED_IMAGES = {"image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp"}
 MAX_PHOTO_BYTES = 5 * 1024 * 1024
 
-# Departments follow how civic complaints are handled across Tamil Nadu:
-#   * Local bodies (Municipal Corporations, Municipalities, Town Panchayats, Village Panchayats) run local
-#     roads, streetlights, water supply, sanitation, drainage and public health. Urban bodies come under the
-#     Municipal Administration & Water Supply Department, rural ones under Rural Development & Panchayat Raj.
-#     A typical municipality splits this between the Municipal Engineer (water, streetlights, roads), the
-#     Sanitary Officer (garbage, drains, public health) and the Commissioner (general complaints).
+# Departments follow how civic complaints are handled across Tamil Nadu (checked against official TN pages):
+#   * Local bodies (Municipal Corporations, Municipalities, Town Panchayats) run local roads, streetlights,
+#     water supply, drainage, sanitation and public health. Urban bodies come under the Municipal Administration
+#     and Water Supply Department; rural ones under Rural Development and Panchayat Raj.
+#   * Officer titles differ by type of body: a Corporation has a Commissioner, City Engineer and City Health
+#     Officer; a Municipality has a Commissioner, Municipal Engineer and Sanitary Officer; a Town Panchayat
+#     is run by an Executive Officer.
 #   * Electricity is TNPDCL (Tamil Nadu Power Distribution Corporation Ltd, formerly TANGEDCO).
 #   * Traffic and noise go to the Tamil Nadu Police.
 CATEGORY_MAP = {
-    "Pothole / Damaged Road": "Local Body - Roads",
-    "Road Obstruction / Fallen Tree": "Local Body - Roads",
-    "Broken Streetlight": "Local Body - Streetlights",
-    "Garbage Not Collected": "Local Body - Sanitation",
-    "Drain Blockage": "Local Body - Drainage",
-    "Water Leakage": "Local Body - Water Supply",
-    "Sewage Overflow": "Local Body - Drainage",
-    "Stray Animal Issue": "Local Body - Public Health",
+    "Pothole / Damaged Road": "Local Body - Engineering",
+    "Road Obstruction / Fallen Tree": "Local Body - Engineering",
+    "Broken Streetlight": "Local Body - Engineering",
+    "Water Leakage": "Local Body - Engineering",
+    "Sewage Overflow": "Local Body - Engineering",
+    "Garbage Not Collected": "Local Body - Sanitary & Public Health",
+    "Drain Blockage": "Local Body - Sanitary & Public Health",
+    "Stray Animal Issue": "Local Body - Sanitary & Public Health",
+    "Park Maintenance": "Local Body - Commissioner's Office",
+    "Other": "Local Body - Commissioner's Office",
     "Power Outage / Electricity Issue": "TNPDCL (Electricity)",
     "Illegal Parking / Traffic Issue": "Tamil Nadu Police - Traffic",
-    "Park Maintenance": "Local Body - General",
     "Noise Pollution": "Tamil Nadu Police",
-    "Other": "Local Body - General",
 }
-LB = "Municipal Corporation / Municipality / Town Panchayat / Village Panchayat"
+LB = "Local Body (Municipal Corporation / Municipality / Town Panchayat)"
 DEPT_FULL = {
-    "Local Body - Roads": f"Municipal Engineer (Roads), {LB}",
-    "Local Body - Streetlights": f"Municipal Engineer (Streetlights), {LB}",
-    "Local Body - Sanitation": f"Sanitary Officer (Solid Waste), {LB}",
-    "Local Body - Drainage": f"Municipal Engineer / Sanitary Officer (Drainage and Sewerage), {LB}",
-    "Local Body - Water Supply": f"Municipal Engineer (Water Supply), {LB}",
-    "Local Body - Public Health": f"Sanitary Officer (Public Health), {LB}",
-    "Local Body - General": f"Commissioner / Executive Officer, {LB}",
+    "Local Body - Engineering": f"Engineering Section, {LB}",
+    "Local Body - Sanitary & Public Health": f"Sanitation and Public Health Section, {LB}",
+    "Local Body - Commissioner's Office": f"Commissioner / Executive Officer, {LB}",
     "TNPDCL (Electricity)": "Tamil Nadu Power Distribution Corporation Limited (TNPDCL)",
     "Tamil Nadu Police - Traffic": "Traffic Police, Tamil Nadu Police",
     "Tamil Nadu Police": "Tamil Nadu Police",
 }
 # Official ways to follow up (checked against news reports of the launches and official TN portal pages).
 LOCAL_BODY_CHANNELS = [
-    {"label": "Your town's office (find it on the official TN urban local bodies site)",
+    {"label": "Find your town's office (official TN urban local bodies site)",
      "value": "tnurbantree.tn.gov.in", "href": "https://www.tnurbantree.tn.gov.in/"},
-    {"label": "State CM Helpline (toll free, 7 am - 10 pm)", "value": "1100", "href": "tel:1100"},
-    {"label": "CM Helpline portal", "value": "cmhelpline.tnega.org", "href": "https://cmhelpline.tnega.org"},
-    {"label": "CM Helpline email", "value": "cmhelpline@tn.gov.in", "href": "mailto:cmhelpline@tn.gov.in"},
+    {"label": "State CM Helpline (Mudhalvarin Mugavari), toll free", "value": "1100", "href": "tel:1100"},
 ]
 TNPDCL_CHANNELS = [
     {"label": "Minnagam helpline (power cuts, complaints)", "value": "94987 94987", "href": "tel:9498794987"},
@@ -87,13 +82,17 @@ TNPDCL_CHANNELS = [
 ]
 POLICE_CHANNELS = [
     {"label": "Emergency (police, fire, ambulance)", "value": "112", "href": "tel:112"},
-    {"label": "State CM Helpline (toll free, 7 am - 10 pm)", "value": "1100", "href": "tel:1100"},
+    {"label": "State CM Helpline (Mudhalvarin Mugavari), toll free", "value": "1100", "href": "tel:1100"},
 ]
+TITLES = ("Officer titles differ: City Engineer / City Health Officer in a Corporation, "
+          "Municipal Engineer / Sanitary Officer in a Municipality, Executive Officer in a Town Panchayat. "
+          "For a village panchayat, contact your panchayat office.")
 DEPT_NOTE = {
-    "Local Body - Roads": "Only roads kept by your local body. State highways are looked after by the Highways Department "
-                          "(report them on the Namma Saalai app); national highways by NHAI.",
-    "Local Body - Streetlights": "Streetlights are maintained by your local body. For a power cut, use TNPDCL (Minnagam 94987 94987).",
-    "Local Body - Sanitation": "Contact the Sanitary Officer of your town or panchayat.",
+    "Local Body - Engineering": "Covers local roads, streetlights, water supply and sewerage. State highways belong to the Highways "
+                                "Department (Namma Saalai app) and national highways to NHAI. For a power cut use TNPDCL "
+                                "(Minnagam 94987 94987). " + TITLES,
+    "Local Body - Sanitary & Public Health": "Garbage, drain cleaning and public health. " + TITLES,
+    "Local Body - Commissioner's Office": "General complaints about municipal or panchayat administration. " + TITLES,
     "TNPDCL (Electricity)": "For streetlights that do not work, report to your local body instead.",
     "Tamil Nadu Police - Traffic": "For an emergency call 112.",
     "Tamil Nadu Police": "For an emergency call 112.",
