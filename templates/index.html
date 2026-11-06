@@ -7,7 +7,7 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 38 34'%3E%3Crect x='2' y='12' width='9' height='20' fill='%230F766E'/%3E%3Crect x='13' y='4' width='11' height='28' fill='%23E39200'/%3E%3Crect x='26' y='16' width='9' height='16' fill='%23D9593D'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Nunito:wght@400;600;700;800&family=Noto+Sans+Tamil:wght@400;600;700;800&family=Noto+Sans+Devanagari:wght@400;600;700;800&family=Noto+Sans+Malayalam:wght@400;600;700;800&family=Noto+Sans+Telugu:wght@400;600;700;800&display=swap">
-<link rel="stylesheet" href="/static/style.css?v=25">
+<link rel="stylesheet" href="/static/style.css?v=32">
 <style>
 /* location button + file picker (kept in the page so they never depend on a cached style.css) */
 .with-icon.has-btn input{padding-right:152px}
@@ -214,21 +214,17 @@
 <script>
 /* city.js - an animated city. Every department is a building; complaints are letters that fly to them. */
 (function () {
-  const W = 1200, H = 360, BASE = 296, BW = 112, GAP = 14;
-  const X0 = (W - (9 * BW + 8 * GAP)) / 2;
+  const W = 1200, H = 360, BASE = 296, BW = 150, GAP = 34;
   const INK = "#1D2B3A";
   // ds = the department names (from the server) that this building stands for
   const B = [
-    {ds: ["Local Body - Roads", "CCMC Engineering - Roads", "Roads & Infrastructure"],                    s: "Roads",        c: "#E4572E", h: 160, roof: "crane",  ic: "road"},
-    {ds: ["Local Body - Streetlights", "CCMC Engineering - Streetlights"],                                s: "Streetlights", c: "#F5A300", h: 172, roof: "signal", ic: "lamp"},
-    {ds: ["Local Body - Sanitation", "CCMC Public Health - Solid Waste", "Sanitation Department"],        s: "Sanitation",   c: "#2E9B5E", h: 134, roof: "pipes",  ic: "trash"},
-    {ds: ["Local Body - Water Supply", "CCMC Engineering - Water Supply", "Water Supply Department"],     s: "Water",        c: "#2F80ED", h: 156, roof: "tank",   ic: "drop"},
-    {ds: ["Local Body - Drainage", "CCMC Engineering - Drainage (UGD)", "Sanitation / Drainage Department", "Sewerage Department"], s: "Drainage", c: "#8E44AD", h: 114, roof: "tanks", ic: "waves"},
-    {ds: ["Local Body - Public Health", "CCMC Public Health", "Animal Welfare / Municipal Health"],        s: "Health",       c: "#E0457B", h: 144, roof: "cross",  ic: "paw"},
-    {ds: ["TNPDCL (Electricity)", "Electrical Department", "CCMC Engineering - Streetlights (old)"],      s: "Electricity",  c: "#243B6B", h: 190, roof: "pylon",  ic: "bolt"},
-    {ds: ["Tamil Nadu Police - Traffic", "Tamil Nadu Police", "Coimbatore City Police - Traffic", "Coimbatore City Police", "Traffic Police / Transport Department", "Local Administration / Police"], s: "Police", c: "#7A5230", h: 108, roof: "tanks", ic: "shield"},
-    {ds: ["Local Body - General", "CCMC Grievance Cell", "Parks & Horticulture", "Local Administration"],   s: "Local body",   c: "#0F9D8F", h: 182, roof: "dome",   ic: "hall"},
+    {ds: ["Local Body - Engineering", "Local Body - Roads", "Local Body - Streetlights", "Local Body - Water Supply", "Local Body - Drainage", "CCMC Engineering - Roads", "CCMC Engineering - Streetlights", "CCMC Engineering - Water Supply", "CCMC Engineering - Drainage (UGD)", "Roads & Infrastructure", "Water Supply Department", "Sewerage Department"], s: "Engineering", c: "#E4572E", h: 170, roof: "crane", ic: "road"},
+    {ds: ["Local Body - Sanitary & Public Health", "Local Body - Sanitation", "Local Body - Public Health", "CCMC Public Health - Solid Waste", "CCMC Public Health", "Sanitation Department", "Sanitation / Drainage Department", "Animal Welfare / Municipal Health"], s: "Sanitary & Health", c: "#2E9B5E", h: 140, roof: "pipes", ic: "trash"},
+    {ds: ["Local Body - Commissioner's Office", "Local Body - General", "CCMC Grievance Cell", "Parks & Horticulture", "Local Administration"], s: "Commissioner", c: "#0F9D8F", h: 184, roof: "dome", ic: "hall"},
+    {ds: ["TNPDCL (Electricity)", "Electrical Department"], s: "TNPDCL", c: "#243B6B", h: 192, roof: "pylon", ic: "bolt"},
+    {ds: ["Tamil Nadu Police - Traffic", "Tamil Nadu Police", "Coimbatore City Police - Traffic", "Coimbatore City Police", "Traffic Police / Transport Department", "Local Administration / Police"], s: "Police", c: "#7A5230", h: 132, roof: "tanks", ic: "shield"},
   ];
+  const X0 = (W - (B.length * BW + (B.length - 1) * GAP)) / 2;
   const ICON = {
     road: '<path d="M5 16L7 2M13 16L11 2M9 4v2M9 8v2M9 12v2"/>',
     drop: '<path d="M9 2.5S4 8 4 11a5 5 0 0010 0c0-3-5-8.5-5-8.5z"/>',
@@ -267,7 +263,7 @@
     let winFill = "", winLine = "";
     for (let r = 0; r < rows; r++) for (let c = 0; c < 3; c++) {
       const on = rnd(i * 31 + r * 7 + c) < lit;
-      const wx = x + 17 + ox + c * 26, wy = y + 16 + r * 30;
+      const wx = x + (BW - 68) / 2 + c * 26, wy = y + 16 + r * 30;
       winFill += `<rect class="${on ? "wl" : "wd"}" x="${wx}" y="${wy}" width="16" height="19"/>`;
       winLine += `<rect x="${wx}" y="${wy}" width="16" height="19"/>`;
     }
@@ -276,13 +272,13 @@
     const rf = roof(b.roof, x + ox, y);
     return `<g class="b" data-i="${i}" data-x="${cx}" data-y="${y}">
       <title>${b.ds.join(" + ")}</title>
-      <g class="fl" filter="url(#wob2)" transform="translate(5 4)">
+      <g class="fl" filter="url(#wob2)" transform="translate(0 0)">
         <g transform="${rt}">${rf}</g>
         <rect x="${x}" y="${y}" width="${BW}" height="${b.h}" fill="${b.c}"/>
         ${winFill}
         <circle cx="${cx}" cy="${by}" r="21" fill="#FFF8E6"/>
       </g>
-      <rect x="${x + BW - 30}" y="${y + 3}" width="28" height="${b.h - 6}" fill="url(#hatch)" opacity=".5"/>
+      <rect x="${x + BW - 30}" y="${y + 3}" width="28" height="${b.h - 6}" fill="url(#hatch)" opacity=".10"/>
       <g class="ol" filter="url(#wob)">
         <g transform="${rt}">${rf}</g>
         <rect x="${x}" y="${y}" width="${BW}" height="${b.h}"/>
@@ -303,18 +299,18 @@
       far += `<rect x="${x}" y="${BASE - h}" width="${w}" height="${h}"/>`;
     }
     let b = ""; B.forEach((bb, i) => { b += building(bb, i, 0.65); });
-    const SX = 596, SY = 72, rays = Array.from({length: 10}, (_, k) => { const a = k * Math.PI / 5; return `M${SX + Math.cos(a) * 52} ${SY + Math.sin(a) * 52}L${SX + Math.cos(a) * 70} ${SY + Math.sin(a) * 70}`; }).join("");
+    const SX = 1090, SY = 78, rays = Array.from({length: 10}, (_, k) => { const a = k * Math.PI / 5; return `M${SX + Math.cos(a) * 52} ${SY + Math.sin(a) * 52}L${SX + Math.cos(a) * 70} ${SY + Math.sin(a) * 70}`; }).join("");
     return `
     <defs>
-      <filter id="wob" x="-6%" y="-6%" width="112%" height="112%"><feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="3"/><feDisplacementMap in="SourceGraphic" scale="4.5"/></filter>
-      <filter id="wob2" x="-6%" y="-6%" width="112%" height="112%"><feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" seed="8"/><feDisplacementMap in="SourceGraphic" scale="6"/></filter>
+      <filter id="wob" x="-6%" y="-6%" width="112%" height="112%"><feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="3"/><feDisplacementMap in="SourceGraphic" scale="0"/></filter>
+      <filter id="wob2" x="-6%" y="-6%" width="112%" height="112%"><feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" seed="8"/><feDisplacementMap in="SourceGraphic" scale="0"/></filter>
       <filter id="glow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="7" result="g"/><feFlood flood-color="#FFD24A" flood-opacity=".9"/><feComposite in2="g" operator="in" result="c"/><feMerge><feMergeNode in="c"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
       <pattern id="hatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><path d="M0 0V7" stroke="${INK}" stroke-width="1.5"/></pattern>
     </defs>
     <g filter="url(#wob2)" class="sun"><circle cx="${SX + 5}" cy="${SY + 5}" r="40" fill="#FFD24A"/></g>
     <g filter="url(#wob)" fill="none" stroke="${INK}" stroke-width="3" stroke-linecap="round"><circle cx="${SX}" cy="${SY}" r="40"/><path d="${rays}"/></g>
     <g class="cloud c1" filter="url(#wob)"><path d="M150 84h104c18 0 22-24 4-28-6-20-34-22-42-6-14-8-32 4-28 20-14 0-20 14-8 14z" fill="#fff" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/></g>
-    <g class="birds" fill="none" stroke="${INK}" stroke-width="2.6" stroke-linecap="round"><path d="M900 60q8-10 16 0q8-10 16 0M950 88q6-8 12 0q6-8 12 0M860 104q6-8 12 0q6-8 12 0"/></g>
+    <g class="birds" fill="none" stroke="${INK}" stroke-width="2.6" stroke-linecap="round"><path d="M860 52q8-10 16 0q8-10 16 0M910 80q6-8 12 0q6-8 12 0M820 96q6-8 12 0q6-8 12 0"/></g>
     <g filter="url(#wob)" fill="none" stroke="${INK}" stroke-width="2" opacity=".22">${far}</g>
     <g filter="url(#wob2)"><rect x="-10" y="${BASE + 4}" width="${W + 20}" height="${H - BASE}" fill="#4B5563"/></g>
     <g filter="url(#wob)" fill="none" stroke="${INK}" stroke-width="3.2" stroke-linecap="round"><path d="M-10 ${BASE}H${W + 10}"/><path d="M-10 ${BASE + 52}H${W + 10}" stroke="#F6E7B8" stroke-dasharray="26 18" stroke-width="3.5"/></g>
