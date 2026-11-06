@@ -7,7 +7,7 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 38 34'%3E%3Crect x='2' y='12' width='9' height='20' fill='%230F766E'/%3E%3Crect x='13' y='4' width='11' height='28' fill='%23E39200'/%3E%3Crect x='26' y='16' width='9' height='16' fill='%23D9593D'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Nunito:wght@400;600;700;800&family=Noto+Sans+Tamil:wght@400;600;700;800&family=Noto+Sans+Devanagari:wght@400;600;700;800&family=Noto+Sans+Malayalam:wght@400;600;700;800&family=Noto+Sans+Telugu:wght@400;600;700;800&display=swap">
-<link rel="stylesheet" href="/static/style.css?v=18">
+<link rel="stylesheet" href="/static/style.css?v=25">
 <style>
 /* location button + file picker (kept in the page so they never depend on a cached style.css) */
 .with-icon.has-btn input{padding-right:152px}
@@ -183,6 +183,13 @@
       </div>
       <div class="callout"><div class="k">Suggested action</div><p id="rAction"></p></div>
       <div><div class="k" style="margin-bottom:6px">Summary</div><p class="summary-p" id="rSummary"></p></div>
+      <div class="follow" id="rFollow" hidden>
+        <div class="k">Where to follow up</div>
+        <p class="who" id="rFull" data-no-t></p>
+        <p class="tgt" id="rTarget" data-no-t></p>
+        <ul id="rChannels" data-no-t></ul>
+        <p class="note" id="rNote" data-no-t></p>
+      </div>
     </section>
 
     <section class="card" style="display:flex;flex-direction:column;gap:22px">
@@ -212,15 +219,15 @@
   const INK = "#1D2B3A";
   // ds = the department names (from the server) that this building stands for
   const B = [
-    {ds: ["Roads & Infrastructure"],                                           s: "Roads",      c: "#E4572E", h: 160, roof: "crane",  ic: "road"},
-    {ds: ["Electrical Department"],                                            s: "Electrical", c: "#243B6B", h: 190, roof: "pylon",  ic: "bolt"},
-    {ds: ["Sanitation Department", "Sanitation / Drainage Department"],        s: "Sanitation", c: "#2E9B5E", h: 134, roof: "pipes",  ic: "trash"},
-    {ds: ["Water Supply Department"],                                          s: "Water",      c: "#2F80ED", h: 156, roof: "tank",   ic: "drop"},
-    {ds: ["Sewerage Department"],                                              s: "Sewerage",   c: "#8E44AD", h: 114, roof: "tanks",  ic: "waves"},
-    {ds: ["Animal Welfare / Municipal Health"],                                s: "Health",     c: "#E0457B", h: 144, roof: "cross",  ic: "paw"},
-    {ds: ["Traffic Police / Transport Department"],                            s: "Traffic",    c: "#F5A300", h: 172, roof: "signal", ic: "car"},
-    {ds: ["Parks & Horticulture"],                                             s: "Parks",      c: "#5BAE3E", h: 108, roof: "trees",  ic: "leaf"},
-    {ds: ["Local Administration / Police", "Local Administration"],            s: "Admin",      c: "#0F9D8F", h: 182, roof: "dome",   ic: "hall"},
+    {ds: ["Local Body - Roads", "CCMC Engineering - Roads", "Roads & Infrastructure"],                    s: "Roads",        c: "#E4572E", h: 160, roof: "crane",  ic: "road"},
+    {ds: ["Local Body - Streetlights", "CCMC Engineering - Streetlights"],                                s: "Streetlights", c: "#F5A300", h: 172, roof: "signal", ic: "lamp"},
+    {ds: ["Local Body - Sanitation", "CCMC Public Health - Solid Waste", "Sanitation Department"],        s: "Sanitation",   c: "#2E9B5E", h: 134, roof: "pipes",  ic: "trash"},
+    {ds: ["Local Body - Water Supply", "CCMC Engineering - Water Supply", "Water Supply Department"],     s: "Water",        c: "#2F80ED", h: 156, roof: "tank",   ic: "drop"},
+    {ds: ["Local Body - Drainage", "CCMC Engineering - Drainage (UGD)", "Sanitation / Drainage Department", "Sewerage Department"], s: "Drainage", c: "#8E44AD", h: 114, roof: "tanks", ic: "waves"},
+    {ds: ["Local Body - Public Health", "CCMC Public Health", "Animal Welfare / Municipal Health"],        s: "Health",       c: "#E0457B", h: 144, roof: "cross",  ic: "paw"},
+    {ds: ["TNPDCL (Electricity)", "Electrical Department", "CCMC Engineering - Streetlights (old)"],      s: "Electricity",  c: "#243B6B", h: 190, roof: "pylon",  ic: "bolt"},
+    {ds: ["Tamil Nadu Police - Traffic", "Tamil Nadu Police", "Coimbatore City Police - Traffic", "Coimbatore City Police", "Traffic Police / Transport Department", "Local Administration / Police"], s: "Police", c: "#7A5230", h: 108, roof: "tanks", ic: "shield"},
+    {ds: ["Local Body - General", "CCMC Grievance Cell", "Parks & Horticulture", "Local Administration"],   s: "Local body",   c: "#0F9D8F", h: 182, roof: "dome",   ic: "hall"},
   ];
   const ICON = {
     road: '<path d="M5 16L7 2M13 16L11 2M9 4v2M9 8v2M9 12v2"/>',
@@ -231,6 +238,8 @@
     leaf: '<path d="M4 14C4 8 8 4 15 3.5 14.5 10.5 10.5 14.5 4.5 14.5M4 14l5-5"/>',
     paw: '<circle cx="5" cy="7" r="1.6"/><circle cx="9" cy="4.5" r="1.6"/><circle cx="13" cy="7" r="1.6"/><path d="M9 9c-2.5 0-4 2-4 3.6 0 1.4 1.2 1.9 2.3 1.9.7 0 1.2-.3 1.7-.3s1 .3 1.7.3c1.1 0 2.3-.5 2.3-1.9C13 11 11.5 9 9 9z"/>',
     car: '<path d="M3 11l1.2-4A1.5 1.5 0 015.6 6h6.8a1.5 1.5 0 011.4 1L15 11v3h-2v-1.5H5V14H3v-3z"/>',
+    lamp: '<path d="M9 2v2.5M5.5 8a3.5 3.5 0 017 0v1h-7zM9 9v6.5M6.5 15.5h5"/>',
+    shield: '<path d="M9 2l6 2.2v4.6c0 3.6-2.5 6.1-6 7.2-3.5-1.1-6-3.6-6-7.2V4.2L9 2z"/><path d="M6.3 9l2 2 3.6-3.8"/>',
     hall: '<path d="M2 15h14M3.5 15V8M7 15V8M11 15V8M14.5 15V8M2 8l7-5 7 5z"/>',
   };
   const rnd = (i) => { const x = Math.sin(i * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
@@ -386,7 +395,7 @@
     svg = document.getElementById("city");
     if (!svg) return;
     svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
-    svg.setAttribute("preserveAspectRatio", "xMidYMax slice");
+    svg.setAttribute("preserveAspectRatio", "xMidYMax meet");
     svg.setAttribute("role", "img");
     svg.setAttribute("aria-label", "A city where each building is a department");
     svg.innerHTML = markup();
@@ -666,6 +675,20 @@ async function showResult(d){
   why.hidden = !d.severity_reason;
   $("rSummary").textContent = d.summary;
   $("rAction").textContent = d.suggested_action;
+  const fu = d.follow_up;
+  $("rFollow").hidden = !fu;
+  if (fu) {
+    $("rFull").textContent = fu.full_name;
+    $("rTarget").textContent = fu.target || ""; $("rTarget").hidden = !fu.target;
+    $("rNote").textContent = fu.note || ""; $("rNote").hidden = !fu.note;
+    const ul = $("rChannels"); ul.innerHTML = "";
+    (fu.channels || []).forEach((ch) => {
+      const li = document.createElement("li"), lab = document.createElement("span"), a = document.createElement("a");
+      lab.textContent = ch.label; a.textContent = ch.value; a.href = ch.href;
+      if (/^https?:/.test(ch.href)) { a.target = "_blank"; a.rel = "noopener"; }
+      li.append(lab, a); ul.appendChild(li);
+    });
+  }
   $("rSubject").value = d.email_subject;
   $("rEmail").value = d.email_body;
   if (LANG !== "en") await applyLang();
