@@ -485,7 +485,7 @@ $("rows").addEventListener("click", (e) => {
       <dt>Map</dt><dd>${c.map_url ? `<a class="maplink" href="${esc(c.map_url)}" target="_blank" rel="noopener">Open in Maps</a>` : "No GPS location"}</dd>
       <dt>Contact</dt><dd>${esc(c.contact || "Not provided")}</dd>
       <dt>Summary</dt><dd>${esc(c.summary)}</dd>
-      <dt>Suggested action</dt><dd>${esc(c.suggested_action)}</dd>
+      <dt>Advice given to citizen</dt><dd>${esc(c.suggested_action)}</dd>
     </dl>
     <div><div class="k" style="margin-bottom:6px">Original complaint</div><pre>${esc(c.description)}</pre></div>
     ${c.photo_url ? `<img src="${esc(c.photo_url)}" alt="Photo attached to ${esc(c.complaint_id)}">` : ""}
