@@ -5,7 +5,7 @@
 A citizen describes a neighbourhood problem in plain language (English, Tamil, Malayalam and more). The app works out which office should handle it, rates how urgent it is, drafts a formal complaint letter, and saves the complaint so officials can track it from an admin dashboard.
 
 **Live app:** _add your Render link here_
-**Repository:** _add your GitHub link here_
+**Repository:** https://github.com/nightshade97676-alt/complaint-router
 
 ---
 
@@ -46,6 +46,7 @@ Complaints are routed the way civic issues are handled across Tamil Nadu.
 Notes:
 - "Local body" means the Municipal Corporation, Municipality or Town Panchayat. Urban bodies come under the Municipal Administration and Water Supply Department and rural ones under Rural Development and Panchayat Raj.
 - Officer titles differ by type of body: a Corporation has a Commissioner, City Engineer and City Health Officer; a Municipality has a Commissioner, Municipal Engineer and Sanitary Officer; a Town Panchayat is run by an Executive Officer. For a village panchayat, contact the panchayat office.
+- Water supply and sewerage are mostly run by the local body, but in the Chennai area they belong to Chennai Metrowater (CMWSSB, toll free 1916), and a few schemes that serve several local bodies are run by the TWAD Board.
 - State highways belong to the Highways Department (report them on the Namma Saalai app) and national highways to NHAI. Neither is a department in this app.
 - TNPDCL is the Tamil Nadu Power Distribution Corporation, formerly TANGEDCO.
 
@@ -56,6 +57,7 @@ Notes:
 | State CM Helpline `1100` (Mudhalvarin Mugavari) | Local body and police complaints |
 | `tnurbantree.tn.gov.in` | Finding your town's office page |
 | TNPDCL Minnagam `94987 94987` or `1912` | Electricity |
+| Chennai Metrowater `1916` | Water and sewer complaints in the Chennai area |
 | `112` | Emergencies |
 
 These come from official Tamil Nadu pages and news reports of the launches. Contact details change, so check them before relying on them. The app drafts a letter but does not send it.
@@ -214,4 +216,6 @@ Admin requests send the password in an `x-admin-key` header.
 - [DT Next: TANGEDCO renamed TNPDCL](https://www.dtnext.in/amp/story/news/tamilnadu/union-govt-approves-tangedco-renaming-to-tnpdcl-794611)
 - [DT Next: Mudhalvarin Mugavari department](https://www.dtnext.in/news/tamilnadu/new-dept-mudhalvarin-mugavari-formed)
 - [DT Next: 1100 CM Helpline](https://www.dtnext.in/news/tamilnadu/tn-cm-launches-1100-helpline-for-redressal-of-people-grievances)
+- [TWAD Board](https://en.wikipedia.org/wiki/Tamil_Nadu_Water_Supply_and_Drainage_Board)
+- [Chennai Metrowater complaints](https://cmwssb.tn.gov.in/node/106)
 - [Citizen Matters: Namma Saalai app](https://citizenmatters.in/namma-saalai-app-potholes-highways-repair-omr-road-infrastructure-chennai/)
