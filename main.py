@@ -87,10 +87,19 @@ POLICE_CHANNELS = [
 TITLES = ("Officer titles differ: City Engineer / City Health Officer in a Corporation, "
           "Municipal Engineer / Sanitary Officer in a Municipality, Executive Officer in a Town Panchayat. "
           "For a village panchayat, contact your panchayat office.")
+DEPT_CONTACT = {
+    "Local Body - Engineering": "Engineering Section of your local body (City Engineer or Municipal Engineer)",
+    "Local Body - Sanitary & Public Health": "Sanitation and Public Health Section of your local body (Sanitary Officer or City Health Officer)",
+    "Local Body - Commissioner's Office": "Commissioner's office of your local body (Executive Officer in a Town Panchayat)",
+    "TNPDCL (Electricity)": "TNPDCL by calling Minnagam on 94987 94987",
+    "Tamil Nadu Police - Traffic": "Traffic Police (call 112 only in an emergency)",
+    "Tamil Nadu Police": "Tamil Nadu Police (call 112 only in an emergency)",
+}
 DEPT_NOTE = {
-    "Local Body - Engineering": "Covers local roads, streetlights, water supply and sewerage. State highways belong to the Highways "
-                                "Department (Namma Saalai app) and national highways to NHAI. For a power cut use TNPDCL "
-                                "(Minnagam 94987 94987). " + TITLES,
+    "Local Body - Engineering": "Covers local roads, streetlights, water supply and sewerage. Exceptions: in the Chennai area water and "
+                                "sewer complaints go to Chennai Metrowater (CMWSSB, toll free 1916); a few water schemes serving several "
+                                "local bodies are run by the TWAD Board; state highways belong to the Highways Department (Namma Saalai "
+                                "app) and national highways to NHAI. For a power cut use TNPDCL (Minnagam 94987 94987). " + TITLES,
     "Local Body - Sanitary & Public Health": "Garbage, drain cleaning and public health. " + TITLES,
     "Local Body - Commissioner's Office": "General complaints about municipal or panchayat administration. " + TITLES,
     "TNPDCL (Electricity)": "For streetlights that do not work, report to your local body instead.",
@@ -106,6 +115,10 @@ def follow_up_for(department: str) -> dict:
         channels = TNPDCL_CHANNELS
     else:
         channels = LOCAL_BODY_CHANNELS
+    channels = list(channels)
+    if department == "Local Body - Engineering":
+        channels.append({"label": "Water or sewer problem in Chennai (Chennai Metrowater), toll free",
+                         "value": "1916", "href": "tel:1916"})
     return {
         "full_name": DEPT_FULL.get(department, department),
         "target": "",
@@ -234,9 +247,9 @@ class AIResult(BaseModel):
     extracted_area: str
 
 
-PROMPT = """You are a municipal complaint triage assistant for an Indian city.
-Analyze the citizen complaint below and return JSON. The complaint may be written in English or Tamil;
-always write every output field in English.
+PROMPT = """You are a civic complaint triage assistant for Tamil Nadu, India.
+Analyze the citizen complaint below and return JSON. The complaint may be written in English, Tamil or another
+Indian language; always write every output field in English.
 
 category: exactly one of: {categories}
   Fallen trees, debris or anything physically blocking a road -> "Road Obstruction / Fallen Tree".
@@ -248,7 +261,8 @@ severity: High, Medium or Low
 severity_reason: one short sentence (max 15 words) saying why you chose that severity
 urgency_score: integer 1-10 (High 8-10, Medium 4-7, Low 1-3)
 summary: one sentence, max 25 words
-suggested_action: one concrete action for the department
+suggested_action: one short tip for the CITIZEN on what to say or include when contacting the department
+  (for example the street name, how long the problem has lasted, a photo). Do not instruct the department.
 email_subject: concise, professional subject line
 issue_paragraph: 2-3 formal sentences describing the issue clearly, in first person ("I wish to report...").
   Do not invent facts that are not in the complaint.
@@ -339,8 +353,8 @@ def clean(text) -> str:
     return " ".join(str(text or "").split())
 
 
-def build_email(department, issue, impact, request, area, landmark, pincode, contact, coords=None) -> str:
-    """Formal complaint letter. Severity is deliberately not mentioned in the text."""
+def build_email(department, issue, impact, request, area, landmark, pincode, contact, coords=None, severity="") -> str:
+    """Formal complaint letter: greeting, issue, location, severity and impact, request, contact, closing."""
     loc_parts = [p for p in [area, f"Landmark: {landmark}" if landmark else "",
                              f"Pincode: {pincode}" if pincode else ""] if p]
     parts = [f"To,\nThe Officer-in-Charge,\n{department}", "Respected Sir/Madam,", issue]
@@ -348,7 +362,8 @@ def build_email(department, issue, impact, request, area, landmark, pincode, con
         parts.append("Location: " + ", ".join(loc_parts))
     if coords:
         parts.append("Exact location on map: " + map_link(*coords))
-    parts += [impact, request]
+    parts.append(f"Severity: {severity}. {impact}" if severity else impact)
+    parts.append(request)
     if contact:
         parts.append(f"You can contact me at: {contact}")
     parts.append("Thank you for your time and support.")
@@ -383,7 +398,11 @@ def normalize(raw: dict, args: tuple, coords=None) -> dict:
     subject = clean(raw.get("email_subject")) or (
         f"Complaint regarding {category}" + (f" - {final_area}" if final_area else "")
     )
-    body = build_email(DEPT_FULL[CATEGORY_MAP[category]], issue, impact, request, final_area, landmark, pincode, contact, coords)
+    body = build_email(DEPT_FULL[CATEGORY_MAP[category]], issue, impact, request, final_area, landmark, pincode, contact, coords, severity)
+
+    dept = CATEGORY_MAP[category]
+    tip = clean(raw.get("suggested_action"))
+    action = f"Contact the {DEPT_CONTACT[dept]}." + (f" {tip}" if tip else " Send the drafted letter and follow up using the channels below.")
 
     return {
         "category": category,
@@ -393,7 +412,7 @@ def normalize(raw: dict, args: tuple, coords=None) -> dict:
         "urgency_score": score,
         "priority": PRIORITY[severity],
         "summary": clean(raw.get("summary")) or description[:140],
-        "suggested_action": clean(raw.get("suggested_action")) or "Inspect and resolve the issue.",
+        "suggested_action": action,
         "email_subject": subject,
         "email_body": body,
         "final_area": final_area,
