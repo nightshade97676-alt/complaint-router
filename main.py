@@ -36,20 +36,85 @@ ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "admin123")
 ALLOWED_IMAGES = {"image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp"}
 MAX_PHOTO_BYTES = 5 * 1024 * 1024
 
+# Departments follow how civic complaints are handled across Tamil Nadu:
+#   * Local bodies (Municipal Corporations, Municipalities, Town Panchayats, Village Panchayats) run local
+#     roads, streetlights, water supply, sanitation, drainage and public health. Urban bodies come under the
+#     Municipal Administration & Water Supply Department, rural ones under Rural Development & Panchayat Raj.
+#     A typical municipality splits this between the Municipal Engineer (water, streetlights, roads), the
+#     Sanitary Officer (garbage, drains, public health) and the Commissioner (general complaints).
+#   * Electricity is TNPDCL (Tamil Nadu Power Distribution Corporation Ltd, formerly TANGEDCO).
+#   * Traffic and noise go to the Tamil Nadu Police.
 CATEGORY_MAP = {
-    "Pothole / Damaged Road": "Roads & Infrastructure",
-    "Road Obstruction / Fallen Tree": "Roads & Infrastructure",
-    "Broken Streetlight": "Electrical Department",
-    "Garbage Not Collected": "Sanitation Department",
-    "Drain Blockage": "Sanitation / Drainage Department",
-    "Water Leakage": "Water Supply Department",
-    "Sewage Overflow": "Sewerage Department",
-    "Stray Animal Issue": "Animal Welfare / Municipal Health",
-    "Illegal Parking / Traffic Issue": "Traffic Police / Transport Department",
-    "Park Maintenance": "Parks & Horticulture",
-    "Noise Pollution": "Local Administration / Police",
-    "Other": "Local Administration",
+    "Pothole / Damaged Road": "Local Body - Roads",
+    "Road Obstruction / Fallen Tree": "Local Body - Roads",
+    "Broken Streetlight": "Local Body - Streetlights",
+    "Garbage Not Collected": "Local Body - Sanitation",
+    "Drain Blockage": "Local Body - Drainage",
+    "Water Leakage": "Local Body - Water Supply",
+    "Sewage Overflow": "Local Body - Drainage",
+    "Stray Animal Issue": "Local Body - Public Health",
+    "Power Outage / Electricity Issue": "TNPDCL (Electricity)",
+    "Illegal Parking / Traffic Issue": "Tamil Nadu Police - Traffic",
+    "Park Maintenance": "Local Body - General",
+    "Noise Pollution": "Tamil Nadu Police",
+    "Other": "Local Body - General",
 }
+LB = "Municipal Corporation / Municipality / Town Panchayat / Village Panchayat"
+DEPT_FULL = {
+    "Local Body - Roads": f"Municipal Engineer (Roads), {LB}",
+    "Local Body - Streetlights": f"Municipal Engineer (Streetlights), {LB}",
+    "Local Body - Sanitation": f"Sanitary Officer (Solid Waste), {LB}",
+    "Local Body - Drainage": f"Municipal Engineer / Sanitary Officer (Drainage and Sewerage), {LB}",
+    "Local Body - Water Supply": f"Municipal Engineer (Water Supply), {LB}",
+    "Local Body - Public Health": f"Sanitary Officer (Public Health), {LB}",
+    "Local Body - General": f"Commissioner / Executive Officer, {LB}",
+    "TNPDCL (Electricity)": "Tamil Nadu Power Distribution Corporation Limited (TNPDCL)",
+    "Tamil Nadu Police - Traffic": "Traffic Police, Tamil Nadu Police",
+    "Tamil Nadu Police": "Tamil Nadu Police",
+}
+# Official ways to follow up (checked against news reports of the launches and official TN portal pages).
+LOCAL_BODY_CHANNELS = [
+    {"label": "Your town's office (find it on the official TN urban local bodies site)",
+     "value": "tnurbantree.tn.gov.in", "href": "https://www.tnurbantree.tn.gov.in/"},
+    {"label": "State CM Helpline (toll free, 7 am - 10 pm)", "value": "1100", "href": "tel:1100"},
+    {"label": "CM Helpline portal", "value": "cmhelpline.tnega.org", "href": "https://cmhelpline.tnega.org"},
+    {"label": "CM Helpline email", "value": "cmhelpline@tn.gov.in", "href": "mailto:cmhelpline@tn.gov.in"},
+]
+TNPDCL_CHANNELS = [
+    {"label": "Minnagam helpline (power cuts, complaints)", "value": "94987 94987", "href": "tel:9498794987"},
+    {"label": "Toll-free", "value": "1912", "href": "tel:1912"},
+    {"label": "TNPDCL website", "value": "tnpdcl.org", "href": "https://www.tnpdcl.org/en/tnpdcl/"},
+]
+POLICE_CHANNELS = [
+    {"label": "Emergency (police, fire, ambulance)", "value": "112", "href": "tel:112"},
+    {"label": "State CM Helpline (toll free, 7 am - 10 pm)", "value": "1100", "href": "tel:1100"},
+]
+DEPT_NOTE = {
+    "Local Body - Roads": "Only roads kept by your local body. State highways are looked after by the Highways Department "
+                          "(report them on the Namma Saalai app); national highways by NHAI.",
+    "Local Body - Streetlights": "Streetlights are maintained by your local body. For a power cut, use TNPDCL (Minnagam 94987 94987).",
+    "Local Body - Sanitation": "Contact the Sanitary Officer of your town or panchayat.",
+    "TNPDCL (Electricity)": "For streetlights that do not work, report to your local body instead.",
+    "Tamil Nadu Police - Traffic": "For an emergency call 112.",
+    "Tamil Nadu Police": "For an emergency call 112.",
+}
+
+
+def follow_up_for(department: str) -> dict:
+    if department.startswith("Tamil Nadu Police"):
+        channels = POLICE_CHANNELS
+    elif department.startswith("TNPDCL"):
+        channels = TNPDCL_CHANNELS
+    else:
+        channels = LOCAL_BODY_CHANNELS
+    return {
+        "full_name": DEPT_FULL.get(department, department),
+        "target": "",
+        "channels": list(channels),
+        "note": DEPT_NOTE.get(department, ""),
+    }
+
+
 DEPARTMENTS = sorted(set(CATEGORY_MAP.values()))
 STATUSES = ["New", "In Progress", "Resolved"]
 PRIORITY = {
@@ -128,6 +193,7 @@ def row_to_dict(row) -> dict:
     d["complaint_id"] = f"CR-{d['id']:05d}"
     d["photo_url"] = f"/uploads/{d['photo']}" if d.get("photo") else None
     d["map_url"] = map_link(d.get("lat"), d.get("lng"))
+    d["follow_up"] = follow_up_for(d.get("department", ""))
     return d
 
 
@@ -217,7 +283,7 @@ def call_gemini(description, area, landmark, pincode, contact) -> dict:
         contact=contact or "not provided",
     )
     primary = os.getenv("GEMINI_MODEL", "gemini-3.5-flash")
-    models = list(dict.fromkeys([primary, "gemini-2.5-flash"]))  # second = backup model
+    models = list(dict.fromkeys([primary, "gemini-3.8-flash"]))  # second = backup model
     last_error = None
     for model in models:
         for attempt in (1, 2):
@@ -318,7 +384,7 @@ def normalize(raw: dict, args: tuple, coords=None) -> dict:
     subject = clean(raw.get("email_subject")) or (
         f"Complaint regarding {category}" + (f" - {final_area}" if final_area else "")
     )
-    body = build_email(CATEGORY_MAP[category], issue, impact, request, final_area, landmark, pincode, contact, coords)
+    body = build_email(DEPT_FULL[CATEGORY_MAP[category]], issue, impact, request, final_area, landmark, pincode, contact, coords)
 
     return {
         "category": category,
@@ -375,7 +441,7 @@ def call_gemini_translate(language: str, texts: list) -> list:
     prompt = TRANSLATE_PROMPT.format(language=language, payload=json.dumps(texts, ensure_ascii=False))
     primary = os.getenv("GEMINI_MODEL", "gemini-3.5-flash")
     last_error = None
-    for model in dict.fromkeys([primary, "gemini-2.5-flash"]):
+    for model in dict.fromkeys([primary, "gemini-3.8-flash"]):
         # first try with "thinking" switched off (much faster for plain translation),
         # then retry normally in case this model does not accept that setting
         for fast in (True, False):
